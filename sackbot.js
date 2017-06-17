@@ -110,10 +110,12 @@ const getResponse = (text) => {
 
     const wordCount = getRandomIntInclusive(5, 30);
 
-    let response;
-    if (lastWord.length > 0) {
-        response = markovChain.start(lastWord).end(wordCount).process()
+    const talkAboutMyself = Math.random() < 0.20;
+    if (talkAboutMyself) {
+        return markovChain.start('i').end(wordCount).process();
     }
+
+    let response = markovChain.start(lastWord).end(wordCount).process();
 
     if (response === lastWord) {
         response = markovChain.start('i').end(wordCount).process();
