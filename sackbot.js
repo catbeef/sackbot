@@ -5,11 +5,14 @@
 require('babel-polyfill');
 
 const express = require('express');
+const mongoose = require('mongoose');
 const schedule = require('node-schedule');
 const promisify = require('promisify-node');
 
 const Botkit = require('botkit');
 const MarkovChain = require('markovchain')
+
+mongoose.Promise = Promise;
 
 ///////////// App setup
 
@@ -25,6 +28,16 @@ app.get('/', function(req, res) {
 app.listen(app.get('port'), function() {
     console.log("Node app is running at localhost:" + app.get('port'));
 });
+
+///////////// Mongoose
+
+mongoose.connect(process.env.MONGO_CONNECTION_STRING);
+
+const messageSchema = mongoose.Schema({
+    text: String
+});
+
+const Message = mongoose.model('Message', messageSchema);
 
 ///////////// Botpoop
 
@@ -64,31 +77,49 @@ const bot = controller.spawn({
     token: process.env.SLACK_TOKEN
 }).startRTM();
 
+////////////// Markov chain setup stuff
+
 const getRandomIntInclusive = (min, max) => {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-const markovChain = new MarkovChain('poop\nass\nballs');
+const markovChain = new MarkovChain();
+
+mongoose.connection.once('open', () => {
+    const stream = Message.find().cursor();
+    stream.on('data', (doc) => {
+        markovChain.parse(doc.text);
+    });
+});
  
 ////////////// Controller stuff
 
+const recordMessage = async (text) => {
+    markovChain.parse(text);  
+
+    const message = new Message({ text });
+
+    return message.save();
+};
+
 const getResponse = (text) => {
     const words = text.split(/\s+/);
+    const lastWord = words[ words.length - 1 ];
 
     const wordCount = getRandomIntInclusive(5, 30);
 
-    return words[0].length > 0
-        ? markovChain.start(words[0]).end(wordCount).process()
+    return lastWord.length > 0
+        ? markovChain.start(lastWord).end(wordCount).process()
         : markovChain.start().end(wordCount).process();
 };
 
 controller.hears(
     ['.*'],
     ['direct_message,direct_mention,mention'],
-    (bot, message) => {
-        markovChain.parse(message.text);  
+    async (bot, message) => {
+        await recordMessage(message.text);
         bot.reply(message, getResponse(message.text));
     }
 )
@@ -96,10 +127,10 @@ controller.hears(
 controller.hears(
     ['.*'],
     'ambient',
-    (bot, message) => {
-        markovChain.parse(message.text);
+    async (bot, message) => {
+        await recordMessage(message.text);
 
-        if (Math.random() < 0.01) {
+        if (Math.random() < 0.05) {
             bot.reply(message, getResponse(message.text));
         }
     }

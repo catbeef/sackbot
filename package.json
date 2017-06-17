@@ -12,16 +12,16 @@
     "botkit": "0.2.2",
     "express": "4.14.0",
     "markovchain": "^1.0.2",
+    "mongoose": "^4.10.6",
     "node-schedule": "1.1.1",
     "promisify-node": "0.4.0"
   },
   "scripts": {
     "build": "babel *.js */*.js -d lib",
-    "local": "heroku ps:scale web=0 --app desolate-everglades-35136 && heroku local",
     "start": "npm run build && node lib/sackbot.js",
-    "deploy-production": "git push -f production master && heroku logs --remote production --tail",
-    "kill-production": "heroku ps:scale web=0 --remote production",
-    "restore-production": "heroku ps:scale web=1 --remote production"
+    "deploy": "git push -f heroku master && npm run restore && heroku logs --tail",
+    "kill": "heroku ps:scale web=0",
+    "restore": "heroku ps:scale web=1"
   },
   "author": "Eric Wyler <ewyler@gmail.com>",
   "license": "ISC"
