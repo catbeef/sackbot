@@ -11,17 +11,15 @@
     "babel-preset-es2017": "6.16.0",
     "botkit": "0.2.2",
     "express": "4.14.0",
+    "markovchain": "^1.0.2",
     "node-schedule": "1.1.1",
     "promisify-node": "0.4.0"
   },
   "scripts": {
     "build": "babel *.js */*.js -d lib",
-
     "local": "heroku ps:scale web=0 --app desolate-everglades-35136 && heroku local",
     "start": "npm run build && node lib/sackbot.js",
-
     "deploy-production": "git push -f production master && heroku logs --remote production --tail",
-
     "kill-production": "heroku ps:scale web=0 --remote production",
     "restore-production": "heroku ps:scale web=1 --remote production"
   },
