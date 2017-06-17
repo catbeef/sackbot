@@ -106,13 +106,17 @@ const recordMessage = async (text) => {
 
 const getResponse = (text) => {
     const words = text.split(/\s+/);
-    const lastWord = words[ words.length - 1 ];
 
     const wordCount = getRandomIntInclusive(5, 30);
 
-    return lastWord.length > 0
-        ? markovChain.start(lastWord).end(wordCount).process()
-        : markovChain.start().end(wordCount).process();
+    let response = '';
+    let index = words.length - 1;
+    while (index >= 0 && response.split(/\s+/).length <= 1) {
+        response = markovChain.start(words[ index ]).end(wordCount).process()
+        index--;
+    }
+
+    return response;
 };
 
 controller.hears(
