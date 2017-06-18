@@ -110,7 +110,7 @@ const getResponse = (text) => {
 
     const wordCount = getRandomIntInclusive(5, 30);
 
-    const talkAboutMyself = Math.random() < 0.20;
+    const talkAboutMyself = Math.random() < 0.10;
     if (talkAboutMyself) {
         return markovChain.start('i').end(wordCount).process();
     }
