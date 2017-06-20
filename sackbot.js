@@ -139,7 +139,7 @@ controller.hears(
     async (bot, message) => {
         await recordMessage(message.text);
 
-        if (Math.random() < 0.05) {
+        if (Math.random() < 0.02) {
             bot.reply(message, getResponse(message.text));
         }
     }
