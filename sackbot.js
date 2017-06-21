@@ -110,7 +110,7 @@ const getResponse = (text) => {
 
     const wordCount = getRandomIntInclusive(5, 30);
 
-    const talkAboutMyself = Math.random() < 0.10;
+    const talkAboutMyself = Math.random() < 0.05;
     if (talkAboutMyself) {
         return markovChain.start('i').end(wordCount).process();
     }
@@ -139,7 +139,7 @@ controller.hears(
     async (bot, message) => {
         await recordMessage(message.text);
 
-        if (Math.random() < 0.02) {
+        if (Math.random() < 0.01) {
             bot.reply(message, getResponse(message.text));
         }
     }
