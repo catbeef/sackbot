@@ -4,6 +4,7 @@
 
 require('babel-polyfill');
 
+const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 const schedule = require('node-schedule');
@@ -13,21 +14,6 @@ const Botkit = require('botkit');
 const MarkovChain = require('markovchain')
 
 mongoose.Promise = Promise;
-
-///////////// App setup
-
-const app = express();
-
-app.set('port', (process.env.PORT || 5000));
-app.use(express.static(__dirname + '/public'));
-
-app.get('/', function(req, res) {
-    res.send('Poop');
-});
-
-app.listen(app.get('port'), function() {
-    console.log("Node app is running at localhost:" + app.get('port'));
-});
 
 ///////////// Mongoose
 
@@ -76,6 +62,8 @@ const controller = Botkit.slackbot({
 const bot = controller.spawn({
     token: process.env.SLACK_TOKEN
 }).startRTM();
+
+const promiseBot = new PromiseBot(bot);
 
 ////////////// Markov chain setup stuff
 
@@ -144,3 +132,62 @@ controller.hears(
         }
     }
 )
+
+///////////// App setup
+
+const app = express();
+
+app.set('port', (process.env.PORT || 5000));
+app.use(express.static(__dirname + '/public'));
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.get('/', function(req, res) {
+    res.send('Poop');
+});
+
+///////////// /confess
+
+let confessionsChannelId;
+
+async function getConfessionsChannelId() {
+    if (confessionsChannelId == undefined) {
+        const resp = await promiseBot.api.channels.list({});
+
+        const confessionsChannel = resp.channels.find(channel => channel.name == 'confessions');
+        if (!confessionsChannel) {
+            throw "I can't work without a confessions channel!";
+        }
+
+        console.log("Found the confessions channel!");
+        console.log(confessionsChannel);
+
+        confessionsChannelId = confessionsChannel.id
+    }
+
+    return confessionsChannelId;
+}
+
+app.post('/confess', async function(req, res) {
+    try {
+        const confessionsId = await getConfessionsChannelId();
+
+        promiseBot.api.chat.postMessage(
+            {
+                as_user: true,
+                channel: confessionsId,
+                link_names: 1,
+                text: req.body.text
+            },
+        );
+
+        res.send('it is confessed. poop ass balls. toodles -mkoryak');
+    } catch (err) {
+        res.status(500).send('Something fucked up');
+
+        throw err;
+    }
+});
+
+app.listen(app.get('port'), function() {
+    console.log("Node app is running at localhost:" + app.get('port'));
+});
