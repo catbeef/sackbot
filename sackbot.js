@@ -176,7 +176,7 @@ app.post('/confess', async function(req, res) {
                 as_user: true,
                 channel: confessionsId,
                 link_names: 1,
-                text: req.body.text
+                text: `I confess: ${ req.body.text }`
             },
         );
 
